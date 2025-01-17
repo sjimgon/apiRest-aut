@@ -8,13 +8,14 @@ require_once 'api.REST.class.php';
 //para que maneje el endpoint(url) correspondiente basado en ese nombre.
 
 // Configuración de la conexión a la base de datos (deberías ajustar esto según tu configuración)
+//La conexion ha sido modificada para hacer a través del archivo config.php
 
-$servername = "";
-$username = "";
-$password = "";
-$dbname = "";
+// $servername = "";
+// $username = "";
+// $password = "";
+// $dbname = "";
 
-$db = new DB($servername, $username, $password, $dbname);
+$db = new DB();
 
 $modeloController = new ModeloController($db);
 

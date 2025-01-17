@@ -35,14 +35,18 @@ if ($user) {
     if (hash('sha256', $password) === $user['password']) {
         // Si la contraseña es correcta generamos el token
         $payload = [
-            "data" => [
                 "id" => $user['id'],
                 "username" => $user['username']
-            ] // Datos del usuario
         ];
         
         // Generar el token
         $jwt = JWT::encode($payload, $secret_key, 'HS256');
+
+        // Guardar el token en la base de datos
+        $query = "UPDATE users SET token = '$jwt' WHERE id = " . $user['id'];
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+
         
         // Devolver el token al cliente
         header('Content-Type: application/json');

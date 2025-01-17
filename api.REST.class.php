@@ -16,12 +16,12 @@ class apiRest{
         $method = $_SERVER['REQUEST_METHOD'];//Tenemos que tener en cuenta que método se está utilizando
         $response = null;//Aquí guardaremos la respuesta que devolveremos al cliente segun el protocolo(JSON)
 
-        //Función   Verbo    URL
-        //INDEX     GET      arrayUri[0] /                              //Obtener todos los registros
-        //SHOW      GET      arrayUri[0] / id(arrayUri[1])              //Obtener un registro por id
-        //STORE     POST     arrayUri[0] / store                        //Formulario para crear un registro
-        //UPDATE    PUT      arrayUri[0] / update / id(arrayUri[2])     //Actualizar un registro con los datos procedentes de un formulario -> No es posible mediante un formulario, utilizaremos POST
-        //DELETE    DELETE   arrayUri[0] / destroy / id(arrayUri[2])    //Eliminar un registro -> No es posible mediante un formulario, utilizaremos POST
+        //Función   Verbo               URL
+        //INDEX     GET                 arrayUri[0] /                              //Obtener todos los registros
+        //SHOW      GET                 arrayUri[0] / id(arrayUri[1])              //Obtener un registro por id
+        //STORE     POST                arrayUri[0] / store                        //Formulario para crear un registro
+        //UPDATE    PUT(POST)Prote      arrayUri[0] / update / id(arrayUri[2])     //Actualizar un registro con los datos procedentes de un formulario -> No es posible mediante un formulario, utilizaremos POST
+        //DELETE    DELETE(POST)Prote   arrayUri[0] / destroy / id(arrayUri[2])    //Eliminar un registro -> No es posible mediante un formulario, utilizaremos POST
         
         switch ($method) {
             case 'GET':
@@ -74,13 +74,14 @@ class apiRest{
                                 http_response_code(401);
                                 echo json_encode(["message" => "Acceso denegado. Token no válido o ausente"]);
                                 exit();
-                            }
-                            try {
-                                $this->controller->delete($arrayUri[2]);
-                                echo "Registro eliminado";
-                            } catch (Exception $e) {
-                                http_response_code(404);
-                                echo "Error al eliminar el registro";
+                            }else{
+                                try {
+                                    $this->controller->delete($arrayUri[2]);
+                                    echo "Registro eliminado";
+                                } catch (Exception $e) {
+                                    http_response_code(404);
+                                    echo "Error al eliminar el registro";
+                                }
                             }
                         }
                     /*UPDATE*/
@@ -93,15 +94,16 @@ class apiRest{
                                 http_response_code(401);
                                 echo json_encode(["message" => "Acceso denegado. Token no válido o ausente"]);
                                 exit();
-                            }
-                            try {
-                                $data = array_values($_POST);
-                                // $data -> id,name,brand,year
-                                $this->controller->updateModelo($arrayUri[2], $data[1], $data[2], $data[3]);
-                                echo "Registro actualizado correctamente";
-                            } catch (Exception $e) {
-                                echo "Error al actualizar el registro";
-                                http_response_code(404);
+                            }else{
+                                try {
+                                    $data = array_values($_POST);
+                                    // $data -> id,name,brand,year
+                                    $this->controller->updateModelo($arrayUri[2], $data[1], $data[2], $data[3]);
+                                    echo "Registro actualizado correctamente";
+                                } catch (Exception $e) {
+                                    echo "Error al actualizar el registro";
+                                    http_response_code(404);
+                                }
                             }
                         }
                     }
