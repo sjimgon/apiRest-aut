@@ -4,64 +4,52 @@ require_once '../db.class.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
-// Clave secreta
-$secret_key = "claveSecreta";
+class Auth{
 
-// Verificar si los datos de la solicitud están presentes
-if (!isset($_POST['username']) || !isset($_POST['password'])) {
-    http_response_code(400);
-    echo json_encode(["message" => "Faltan parámetros en la solicitud"]);
-    exit();
-}
+    private $secret_key;
 
-// Datos de la solicitud (username y password)
-$data = array_values($_POST);
-$username = $data[0];
-$password = $data[1];
+    public function isAuthenticated() {
+        // Clave secreta
+        $this->secret_key = "claveSecreta";
+    }
 
-// Crear conexión a la base de datos
-$db = new DB();
-$conn = $db->getConnection();
+    public function generarToken($username, $password) {
 
-// Comprobamos si el usuario existe en la base de datos
-$query = "SELECT * FROM users WHERE username = '$username'"; // Concatenación directa de la consulta
-$stmt = $conn->prepare($query);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
+        // Crear conexión a la base de datos
+        $db = new DB();
+        $conn = $db->getConnection();
 
-// Si existe el usuario, comprobamos si la contraseña es correcta
-if ($user) {
-    if (hash('sha256', $password) === $user['password']) {
-        // Si la contraseña es correcta generamos el token
-        $payload = [
-                "id" => $user['id'],
-                "username" => $user['username']
-        ];
-        
-        // Generar el token
-        $jwt = JWT::encode($payload, $secret_key, 'HS256');
-
-        // Guardar el token en la base de datos
-        $query = "UPDATE users SET token = '$jwt' WHERE id = " . $user['id'];
+        // Seleccionamos el usuario de la base de datos
+        $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
         $stmt = $conn->prepare($query);
         $stmt->execute();
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
 
-        
-        // Devolver el token al cliente
-        header('Content-Type: application/json');
-        echo json_encode([
-            "message" => "Token generado exitosamente",
-            "token" => $jwt
-        ]);
-    } else {
-        // Contraseña incorrecta
-        http_response_code(401);
-        echo json_encode(["message" => "Contraseña incorrecta"]);
+        // Si existe el usuario, creamos el token y lo guardamos en la base de datos
+        if ($user) {
+
+                // Generamos el payload
+                $payload = [
+                        "id" => $user['id'],
+                        "username" => $user['username']
+                ];
+                
+                // Generar el token
+                $jwt = JWT::encode($payload, $this->secret_key, 'HS256');
+
+                // Guardar el token en la base de datos
+                $query = "UPDATE users SET token = '$jwt' WHERE id = " . $user['id'];
+                $stmt = $conn->prepare($query);
+                $stmt->execute();
+
+                return $jwt;
+
+            } else {
+                http_response_code(401);
+                echo json_encode(["message" => "Usuario o contraseña incorrectos"]);
+            }
+
     }
-} else {
-    // Usuario no encontrado
-    http_response_code(404);
-    echo json_encode(["message" => "Usuario no encontrado"]);
 }
 ?>

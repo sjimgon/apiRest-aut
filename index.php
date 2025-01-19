@@ -15,6 +15,10 @@ require_once 'api.REST.class.php';
 // $password = "";
 // $dbname = "";
 
+if(!$_SESSION){
+    header("Location: registro.php");
+}
+
 $db = new DB();
 
 $modeloController = new ModeloController($db);
